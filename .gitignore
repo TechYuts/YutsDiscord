@@ -2,3 +2,4 @@
 auth.json
 .idea/
 appinfo.json
+node_modules/
