@@ -3,7 +3,7 @@ const Discord = require('discord.js');
 const logger = require('winston');
 const auth = require('./auth.json');
 const request = require('request-promise');
-const appinfo = require('./appinfo.json');
+const appInfo = require('./appinfo.json');
 const http = require('http');
 
 const PREFIX = "?!"
@@ -19,14 +19,14 @@ var bot = new Discord.Client();
 
 //http post server
 var server = http.createServer( function (req, res) {
-    console.dir(req.param);
-
     if (req.method == 'POST') {
-        console.log("POST");
-        var body = '';
-        req.on('data', function (data) {
-            body += data;
-            console.log("Body: " + body);
+        let body = '';
+        req.on('data', function (reqBody) {
+            body = JSON.parse(reqBody)
+            if (body.data[0].user_id !== undefined) {
+                console.log(body.data[0].user_id);
+                bot.channels.get("446477206160408597").send(`User: ${body.data[0].user_id} has started Streaming!`);
+            }
         });
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end('post received');
@@ -45,6 +45,10 @@ bot.on('ready', function() {
 
 bot.on('message', function(message) {
     if (message.author.equals(bot.user)) return;
+
+    if (message.content.includes("baj")) {
+        message.channel.send(`${bot.emojis.find("name","salt")} ${bot.emojis.find("name","salt")} ${bot.emojis.find("name","salt")}`);
+    }
 
     if (!message.content.startsWith(PREFIX)) return;
 
@@ -76,7 +80,7 @@ bot.on('message', function(message) {
                     login: args[1]
                 },
                 headers: {
-                    'Client-ID': appinfo.clientID
+                    'Client-ID': appInfo.clientID
                 },
                 json:true
             };
@@ -86,7 +90,6 @@ bot.on('message', function(message) {
             }).catch(function(err){
                 console.log(err);
         });
-
             //  options = {
             //     method:'POST',
             //     uri:'https://api.twitch.tv/helix/webhooks/hub',
@@ -95,7 +98,7 @@ bot.on('message', function(message) {
             //         topic: `https://api.twitch.tv/helix/users/streams?user_id=${twitchID}`,
             //         mode: 'subscribe',
             //         lease_seconds: 864000,
-            //         secret: appinfo.secret
+            //         secret: appInfo.secret
             //     },
             //     json:true
             // };
@@ -104,7 +107,10 @@ bot.on('message', function(message) {
             // }).catch(function(err){
             //
             // });
-
+            break;
+        case "channel":
+            console.log(message.channel.id);
+            message.channel.send(`This Channel ID is: ${message.channel.id}`);
             break;
     }
 });
