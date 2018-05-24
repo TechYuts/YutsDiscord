@@ -17,8 +17,10 @@
   },
   "homepage": "https://github.com/YutaYanagisawa/YutsDiscord#readme",
   "dependencies": {
+    "cron": "^1.3.0",
     "discord.io": "^2.5.3",
     "discord.js": "^11.3.2",
+    "lodash": "^4.17.10",
     "request": "^2.87.0",
     "request-promise": "^4.2.2",
     "winston": "^2.4.2"
