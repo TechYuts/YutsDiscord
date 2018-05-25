@@ -6,7 +6,7 @@ const appInfo = require('./appinfo.json');
 const http = require('http');
 const _ = require('lodash');
 const CronJob = require('cron').CronJob;
-
+let options;
 const PREFIX = "?!";
 // Configure logger settings
 logger.remove(logger.transports.Console);
@@ -78,6 +78,9 @@ bot.on('message', function(message) {
     var args = message.content.substring(PREFIX.length).split(" ");
 
     switch(args[0].toLowerCase()){
+        case "help":
+            message.channel.send("```?!info - get user info \n?!gee - let the bot choose the game for you. \n?!ping - just try \n?!fn (fortnite IGN) - get player stats. \n\nNote: This bot is extremely allergic to baj and reacts with salt every time he sends pm.```");
+            break;
         case "info": {
             const embed = new Discord.RichEmbed();
 
@@ -115,7 +118,7 @@ bot.on('message', function(message) {
 
             let twitchID;
 
-            let options = {
+            options = {
                 method: 'GET',
                 uri:'https://api.twitch.tv/helix/users',
                 qs: {
@@ -149,6 +152,38 @@ bot.on('message', function(message) {
             // }).catch(function(err){
             //
             // });
+            break;
+
+        case "fn":
+            let platform = "pc";
+            if (args[2] !== undefined){
+                platform = args[2]
+            }
+            options = {
+                method: 'GET',
+                uri:`https://api.fortnitetracker.com/v1/profile/${platform}/${args[1]}`,
+                headers: {
+                    'TRN-Api-Key': appInfo.fnTrackerKey
+                },
+                json:true
+            };
+            request(options).then(function (res){
+                const embed = new Discord.RichEmbed();
+
+                embed.setTitle('Fortnite stats');
+                embed.setColor('#ff8dff');
+                embed.setAuthor(args[1], null, null);
+                embed.setThumbnail("https://vignette.wikia.nocookie.net/fortnite/images/4/48/Items_VoucherBasic.png?size2048");
+                embed.setFooter("Made by Yuts", "https://cdn.discordapp.com/embed/avatars/0.png");
+                embed.addField("User", res.epicUserHandle, false);
+                embed.addField("K/d", res.lifeTimeStats[11].value, true);
+                embed.addField("kills", res.lifeTimeStats[10].value, true);
+                embed.addField("Matches Played", res.lifeTimeStats[7].value, true);
+                embed.addField("Wins", res.lifeTimeStats[8].value, true);
+                message.channel.send(embed);
+            }).catch(function (err) {
+                message.channel.send("User doesn't Exist");
+            });
             break;
         case "channel":
             console.log(message.channel.id);
