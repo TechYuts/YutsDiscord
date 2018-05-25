@@ -6,6 +6,9 @@ const appInfo = require('./appinfo.json');
 const http = require('http');
 const _ = require('lodash');
 const CronJob = require('cron').CronJob;
+const botCommands = require('./core/commands/botCommands.js');
+const webhook = require('./core/webhook/webhook.js');
+
 let options;
 const PREFIX = "?!";
 // Configure logger settings
@@ -19,27 +22,7 @@ logger.level = 'debug';
 var bot = new Discord.Client();
 
 //http post server
-var server = http.createServer( function (req, res) {
-    if (req.method == 'POST') {
-
-        let body = '';
-        req.on('data', function (reqBody) {
-            body = JSON.parse(reqBody)
-            if (body.data[0].user_id !== undefined) {
-                console.log(body.data[0].user_id);
-                bot.channels.get("446477206160408597").send(`User: ${body.data[0].user_id} has started Streaming!`);
-            }
-        });
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end('post received');
-    }
-});
-
-port = 3000;
-host = '127.0.0.1';
-server.listen(port, host);
-console.log('Listening at http://' + host + ':' + port);
-// http post server end
+webhook.createServer(bot);
 
 bot.on('ready', function() {
     console.log("connected!");
@@ -79,37 +62,17 @@ bot.on('message', function(message) {
 
     switch(args[0].toLowerCase()){
         case "help":
-            message.channel.send("```?!info - get user info \n?!gee - let the bot choose the game for you. \n?!ping - just try \n?!fn (fortnite IGN) - get player stats. \n\nNote: This bot is extremely allergic to baj and reacts with salt every time he sends pm.```");
+            botCommands.getHelp(message);
             break;
-        case "info": {
-            const embed = new Discord.RichEmbed();
-
-            embed.setTitle('User Info');
-            embed.setColor('#ff8d00');
-            embed.setAuthor(message.author.username, null, null);
-            embed.setThumbnail(message.author.avatarURL);
-            embed.setFooter("Made by Yuts", "https://cdn.discordapp.com/embed/avatars/0.png");
-            embed.addField("User", message.author.username, true);
-            embed.addField("ID", message.author.id, true);
-            embed.addField("Created", message.author.createdAt, true);
-            // embed.addField("Roles", _.map(message.member.roles, 'name').join(', '),false);
-            // console.log(message.member.roles.map());
-            message.channel.send(embed);
-        }
+        case "info":
+            botCommands.getUserInfo(message);
             break;
         case "gee":
-            message.channel.send(`let's play ${_.sample(appInfo.gameList)}!`);
+            botCommands.getRandomGames(message);
             break;
         case "ping":
             console.log(`Executed ${args[0]}`);
             message.channel.send("Pong!");
-            break;
-
-        case "createhook":
-            console.log(`Executed ${args[0]}`);
-            message.channel.createWebhook("Sample Webhook", "https://i.imgur.com/p2qNFag.png")
-                .then(wb => message.author.send(`Here is your webhook https://canary.discordapp.com/api/webhooks/${wb.id}/${wb.token}`))
-                .catch(console.error);
             break;
 
         case "twitch":
@@ -155,39 +118,7 @@ bot.on('message', function(message) {
             break;
 
         case "fn":
-            let platform = "pc";
-            if (args[2] !== undefined){
-                platform = args[2]
-            }
-            options = {
-                method: 'GET',
-                uri:`https://api.fortnitetracker.com/v1/profile/${platform}/${args[1]}`,
-                headers: {
-                    'TRN-Api-Key': appInfo.fnTrackerKey
-                },
-                json:true
-            };
-            request(options).then(function (res){
-                const embed = new Discord.RichEmbed();
-
-                embed.setTitle('Fortnite stats');
-                embed.setColor('#ff8dff');
-                embed.setAuthor(args[1], null, null);
-                embed.setThumbnail("https://vignette.wikia.nocookie.net/fortnite/images/4/48/Items_VoucherBasic.png?size2048");
-                embed.setFooter("Made by Yuts", "https://cdn.discordapp.com/embed/avatars/0.png");
-                embed.addField("User", res.epicUserHandle, false);
-                embed.addField("K/d", res.lifeTimeStats[11].value, true);
-                embed.addField("kills", res.lifeTimeStats[10].value, true);
-                embed.addField("Matches Played", res.lifeTimeStats[7].value, true);
-                embed.addField("Wins", res.lifeTimeStats[8].value, true);
-                message.channel.send(embed);
-            }).catch(function (err) {
-                message.channel.send("User doesn't Exist");
-            });
-            break;
-        case "channel":
-            console.log(message.channel.id);
-            message.channel.send(`This Channel ID is: ${message.channel.id}`);
+            botCommands.getFortniteStats(message, args[1]);
             break;
     }
 });
