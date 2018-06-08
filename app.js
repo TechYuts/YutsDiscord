@@ -3,8 +3,6 @@ const logger = require('winston');
 const auth = require('./auth.json');
 const request = require('request-promise');
 const appInfo = require('./appinfo.json');
-const http = require('http');
-const _ = require('lodash');
 const CronJob = require('cron').CronJob;
 const botCommands = require('./core/commands/botCommands.js');
 const webhook = require('./core/webhook/webhook.js');
@@ -19,7 +17,7 @@ logger.add(logger.transports.Console, {
 
 logger.level = 'debug';
 // Initialize Discord Bot
-var bot = new Discord.Client();
+const bot = new Discord.Client();
 
 //http post server
 webhook.createServer(bot);
@@ -29,7 +27,7 @@ bot.on('ready', function() {
 });
 
 // cron
-var job = new CronJob({
+const job = new CronJob({
     cronTime: '00 00 21 * * *',
     onTick: function() {
         bot.channels.get("446477206160408597").send("It's time to play boisss!");
@@ -41,24 +39,10 @@ job.start();
 
 bot.on('message', function(message) {
     if (message.author.equals(bot.user)) return;
-
-    var salt = bot.emojis.find("name","salt");
-
-    if (message.author.equals(bot.users.find("id","393300171485609984"))) {
-        message.react(salt);
-    };
-
-    if (message.content.toLowerCase().includes("baj") || message.content.toLowerCase().includes("dot")) {
-        message.channel.send(`${salt} ${salt} ${salt}`);
-    }
-
-    if (message.content.includes("kim")) {
-        message.channel.send(`Move on move on din boiii, ${salt} ${salt} ${salt}`);
-    }
-
+    
     if (!message.content.startsWith(PREFIX)) return;
 
-    var args = message.content.substring(PREFIX.length).split(" ");
+    const args = message.content.substring(PREFIX.length).split(" ");
 
     switch(args[0].toLowerCase()){
         case "help":
@@ -94,6 +78,7 @@ bot.on('message', function(message) {
             };
 
             request(options).then(function (res){
+                twitchID = res.data[0].id;
                 message.channel.send(`The twitch ID is:${res.data[0].id}`);
             }).catch(function(err){
                 console.log(err);
