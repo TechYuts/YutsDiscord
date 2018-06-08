@@ -1,6 +1,7 @@
 const appInfo = require('../../appinfo.json');
 const request = require('request-promise');
 const Discord = require('discord.js');
+const _ = require('lodash');
 
 module.exports = {
     getFortniteStats: function(message, ign){
