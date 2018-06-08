@@ -3,9 +3,9 @@ const logger = require('winston');
 const auth = require('./auth.json');
 const request = require('request-promise');
 const appInfo = require('./appinfo.json');
-const CronJob = require('cron').CronJob;
 const botCommands = require('./core/commands/botCommands.js');
 const webhook = require('./core/webhook/webhook.js');
+const jobs = require('./core/functions/jobs.js');
 
 let options;
 const PREFIX = "?!";
@@ -16,30 +16,23 @@ logger.add(logger.transports.Console, {
 });
 
 logger.level = 'debug';
+
 // Initialize Discord Bot
 const bot = new Discord.Client();
 
 //http post server
 webhook.createServer(bot);
 
+//cron
+jobs.letsGameAlertJob();
+
 bot.on('ready', function() {
     console.log("connected!");
 });
 
-// cron
-const job = new CronJob({
-    cronTime: '00 00 21 * * *',
-    onTick: function() {
-        bot.channels.get("446477206160408597").send("It's time to play boisss!");
-    },
-    start: false,
-    timeZone: 'Asia/Tokyo'
-});
-job.start();
-
 bot.on('message', function(message) {
     if (message.author.equals(bot.user)) return;
-    
+
     if (!message.content.startsWith(PREFIX)) return;
 
     const args = message.content.substring(PREFIX.length).split(" ");
